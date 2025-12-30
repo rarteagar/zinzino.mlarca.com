@@ -22,5 +22,19 @@ class AdminUserSeeder extends Seeder
         if (! $user->hasRole('super-admin')) {
             $user->assignRole('super-admin');
         }
+
+        // create client record for admin user
+        try {
+            \App\Models\Client::firstOrCreate([
+                'user_id' => $user->id,
+            ], [
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->whatsapp,
+                'is_self' => true,
+            ]);
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 }

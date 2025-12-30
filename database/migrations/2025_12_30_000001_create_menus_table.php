@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('order')->default(0);
             $table->foreignId('parent_id')->nullable()->constrained('menus')->onDelete('cascade');
             $table->string('permission')->nullable(); // Nombre del permiso necesario
+            $table->string('area')->default('web');
             $table->timestamps();
         });
     }
