@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tests', [TestController::class, 'store'])->name('tests.store');
     Route::get('/tests/{test}', [TestController::class, 'show'])->name('tests.show');
     Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+    Route::post('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
 });
 
 Route::middleware('auth')->group(function () {

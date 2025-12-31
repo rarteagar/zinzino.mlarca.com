@@ -12,6 +12,7 @@
         "filament/spatie-laravel-translatable-plugin": "*",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "smalot/pdfparser": "^2.12",
         "spatie/laravel-menu": "^4.2",
         "spatie/laravel-permission": "^6.24"
     },

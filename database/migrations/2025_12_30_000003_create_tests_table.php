@@ -9,21 +9,16 @@ return new class extends Migration {
     {
         Schema::create('tests', function (Blueprint $table) {
             $table->id();
-
-            // who registered the test (logged-in user)
-            $table->foreignId('entered_by_id')->constrained('users')->onDelete('cascade');
-
-            // subject can be a registered user
-            $table->foreignId('subject_user_id')->nullable()->constrained('users')->nullOnDelete();
-
-            // or a client managed by the user
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
+            $table->unsignedTinyInteger('subject_age')->nullable();
+            $table->unsignedSmallInteger('subject_height_cm')->nullable();
+            $table->decimal('subject_weight_kg', 5, 2)->nullable();
+            $table->text('health_challenges')->nullable();
+            $table->text('pdf_text')->nullable();
+            // estado del test: Registrado, En proceso, Completado, Cancelado
+            $table->enum('status', ['Registrado', 'En proceso', 'Completado', 'Cancelado'])->default('Registrado');
 
-            $table->boolean('is_my_test')->default(true);
-            $table->date('sample_date')->nullable();
-            $table->string('type')->nullable();
-            $table->json('data')->nullable();
-            $table->decimal('score', 8, 2)->nullable();
             $table->timestamps();
         });
     }

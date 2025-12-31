@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
 
 /**
  * @property int $id
@@ -40,40 +42,69 @@ class Test extends Model
 {
     use HasFactory;
 
+    // Campos asignables
     protected $fillable = [
-        'entered_by_id',
-        'subject_user_id',
+        'user_id',
         'client_id',
-        'is_my_test',
-        'sample_date',
-        'type',
-        'data',
-        'score',
         'subject_age',
         'subject_height_cm',
         'subject_weight_kg',
         'health_challenges',
+        'pdf_text',
+        'status',
     ];
 
+    // Casts
     protected $casts = [
-        'data' => 'array',
-        'is_my_test' => 'boolean',
-        'sample_date' => 'date',
-        'subject_weight_kg' => 'float',
+        'user_id' => 'integer',
+        'client_id' => 'integer',
+        'subject_age' => 'integer',
+        'subject_height_cm' => 'integer',
+        'subject_weight_kg' => 'decimal:2',
+        'health_challenges' => 'string',
+        'pdf_text' => 'string',
     ];
 
-    public function enteredBy()
-    {
-        return $this->belongsTo(User::class, 'entered_by_id');
-    }
+    // Default attributes (mirrors migration default)
+    protected $attributes = [
+        'status' => 'Registrado',
+    ];
 
-    public function subjectUser()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'subject_user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function client()
     {
         return $this->belongsTo(Client::class, 'client_id');
+    }
+
+
+    // Accessor: URL público del PDF (disk "public")
+    public function getPdfUrlAttribute(): ?string
+    {
+        if (empty($this->pdf_text)) {
+            return null;
+        }
+        return Storage::disk('public')->url($this->pdf_text);
+    }
+
+    // Helper para almacenar el PDF con nombre "tests/test_{id}.pdf"
+    // Retorna la ruta guardada (relativa al disk) o null
+    public function storePdf(UploadedFile $file): ?string
+    {
+        if (!$this->exists) {
+            // asegurar que el modelo tenga id
+            $this->save();
+        }
+        $filename = "test_{$this->id}.pdf";
+        $path = $file->storeAs('tests', $filename, 'public');
+        if ($path) {
+            $this->pdf_text = $path;
+            $this->save();
+            return $path;
+        }
+        return null;
     }
 }

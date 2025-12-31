@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -62,5 +63,50 @@ class ClientController extends Controller
         }
 
         return redirect()->back()->with('status', 'Cliente creado');
+    }
+
+
+    public function update(Client $client, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'identifier' => 'nullable|string|max:255',
+                'email' => [
+                    'required',
+                    'email',
+                    'max:255',
+                    Rule::unique('clients', 'email')->ignore($client->id)
+                ],
+                'phone' => 'required|string|max:50',
+                'birthdate' => 'required|date',
+                'height_cm' => 'required|integer|min:30|max:300',
+                'weight_kg' => 'required|numeric|min:1|max:500'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+            }
+            throw $e;
+        }
+
+        $user = Auth::user();
+        if ($client->user_id !== $user->id) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+            }
+            abort(403);
+        }
+
+        \DB::transaction(function () use ($client, $validated) {
+            // preservar explícitamente is_self (opcional)
+            $client->update(array_merge($validated, ['is_self' => $client->is_self]));
+        });
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'client' => $client->refresh()]);
+        }
+
+        return redirect()->back()->with('status', 'Cliente actualizado');
     }
 }
